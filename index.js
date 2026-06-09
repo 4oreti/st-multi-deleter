@@ -60,8 +60,9 @@ const styleHtml = `
     }
     .md-win {
         position: relative; width: 90vw; max-width: 700px; max-height: 85vh;
-        background-color: var(--SmartThemeBgColor, #1a1a1a);
-        background-image: linear-gradient(var(--SmartThemeBgColor, #1a1a1a), var(--SmartThemeBgColor, #1a1a1a));
+        background: var(--SmartThemeBlurTintColor, rgba(30,30,30,0.95));
+        backdrop-filter: blur(10px);
+        -webkit-backdrop-filter: blur(10px);
         border: 1px solid var(--SmartThemeBorderColor, #444);
         border-radius: 12px; display: flex; flex-direction: column;
         box-shadow: 0 20px 60px rgba(0,0,0,0.8); overflow: hidden;
