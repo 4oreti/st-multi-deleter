@@ -4,7 +4,6 @@
     "requires": [],
     "optional": [],
     "js": "index.js",
-    "css": "style.css",
     "author": "4oreti",
     "version": "1.0.0",
     "homePage": "https://github.com/4oreti/st-multi-deleter",
