@@ -6,6 +6,59 @@ let isProcessing = false;
 let selectedIds = new Set();
 let lastClickedId = null;
 
+// ================= 把 CSS 嵌回代码中，防止任何人加载失败 =================
+const styleHtml = `
+<style>
+    .md-click-catcher {
+        position: absolute; top: 0; left: 0; right: 0; bottom: 0;
+        z-index: 1000; cursor: pointer; border-radius: 10px;
+        transition: all 0.2s ease;
+    }
+    .mes.md-selected .md-click-catcher {
+        background: rgba(255, 71, 87, 0.15);
+        border: 2px solid #ff4757;
+        backdrop-filter: brightness(0.7);
+    }
+    .mes.md-selected .md-click-catcher::after {
+        content: '✓'; position: absolute; right: 15px; top: 15px;
+        background: #ff4757; color: white; width: 24px; height: 24px;
+        border-radius: 50%; display: flex; align-items: center; justify-content: center;
+        font-weight: bold; font-size: 14px; box-shadow: 0 2px 5px rgba(0,0,0,0.5);
+    }
+    .md-modal-overlay {
+        position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+        background: rgba(0,0,0,0.75); backdrop-filter: blur(5px);
+        z-index: 999999; display: flex; align-items: center; justify-content: center;
+    }
+    .md-modal-box {
+        background: var(--SmartThemeBlurTintColor, #222); width: 95%; max-width: 700px;
+        max-height: 85vh; border-radius: 15px; border: 1px solid var(--SmartThemeBorderColor, #555);
+        display: flex; flex-direction: column; overflow: hidden; box-shadow: 0 10px 40px rgba(0,0,0,0.6);
+    }
+    .md-modal-header { padding: 15px 20px; border-bottom: 1px solid rgba(255,255,255,0.1); font-weight: bold; font-size: 18px; display:flex; justify-content: space-between; align-items: center;}
+    .md-modal-body { padding: 15px; overflow-y: auto; flex: 1; background: rgba(0,0,0,0.2); }
+    .md-modal-footer { padding: 15px 20px; border-top: 1px solid rgba(255,255,255,0.1); display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap:10px;}
+    .md-nuke-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 12px; }
+    .md-nuke-card {
+        background: rgba(255, 71, 87, 0.08); border: 1px solid rgba(255, 71, 87, 0.3);
+        border-radius: 8px; padding: 12px; display: flex; flex-direction: column; gap: 8px;
+        transition: transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275), opacity 0.2s;
+    }
+    .md-nuke-card:hover { border-color: rgba(255, 71, 87, 0.8); background: rgba(255, 71, 87, 0.15); }
+    .md-nuke-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px dashed rgba(255,255,255,0.2); padding-bottom: 6px; }
+    .md-nuke-id { font-weight: bold; color: #ff6b81; font-size: 13px; }
+    .md-nuke-name { font-size: 12px; color: #ccc; flex: 1; margin-left: 8px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .md-spare-btn {
+        background: #10ac84; color: white; border: none; border-radius: 4px; padding: 4px 8px;
+        font-size: 12px; cursor: pointer; display: flex; align-items: center; gap: 4px;
+    }
+    .md-spare-btn:hover { background: #1dd1a1; transform: scale(1.05); }
+    .md-nuke-text { font-size: 13px; color: #ddd; line-height: 1.4; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
+    .md-stats-bar { display: flex; gap: 15px; font-size: 13px; color: #aaa; margin-bottom: 15px; padding: 10px; background: rgba(0,0,0,0.3); border-radius: 8px; flex-wrap: wrap;}
+    .md-stats-bar span { color: #fff; font-weight: bold; }
+</style>`;
+$('head').append(styleHtml);
+
 // ================= 核心逻辑 =================
 function toggleMode() {
     if (isProcessing) return;
@@ -77,7 +130,7 @@ function updateBubbleVisuals(id) {
 function showControlPanel() {
     if (!document.getElementById('multi-delete-panel')) {
         const html = `
-        <div id="multi-delete-panel" style="position: fixed; bottom: 70px; left: 50%; transform: translateX(-50%); background: var(--SmartThemeBlurTintColor, rgba(0,0,0,0.9)); backdrop-filter: blur(10px); padding: 12px 15px; border-radius: 12px; z-index: 99998; border: 1px solid var(--SmartThemeBorderColor, #555); box-shadow: 0 4px 15px rgba(0,0,0,0.5); display: flex; flex-direction: column; gap: 10px; min-width: 320px; max-width: 95vw;">
+        <div id="multi-delete-panel" style="position: fixed; bottom: 85px; left: 50%; transform: translateX(-50%); background: var(--SmartThemeBlurTintColor, rgba(0,0,0,0.9)); backdrop-filter: blur(10px); padding: 12px 15px; border-radius: 12px; z-index: 99998; border: 1px solid var(--SmartThemeBorderColor, #555); box-shadow: 0 4px 15px rgba(0,0,0,0.5); display: flex; flex-direction: column; gap: 10px; min-width: 320px; max-width: 95vw;">
             <div style="display: flex; justify-content: space-between; align-items: center; gap: 10px; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 8px;">
                 <span id="multi-delete-count" style="font-weight: bold; color: white; font-size: 14px; white-space: nowrap;">已选 0 条</span>
                 <div style="display: flex; align-items: center; gap: 5px;">
