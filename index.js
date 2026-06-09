@@ -114,7 +114,7 @@ function showControlPanel() {
             updatePanelCount();
         });
         $('#md-btn-down').on('click', () => {
-            if (selectedIds.size === 0) return toastr.warning("请先点击选择一个起始楼层。");
+            if (selectedIds.size === 0) return toastr.warning("请先点击选择一个起始楼层 o-o");
             const startId = Math.min(...Array.from(selectedIds));
             $('.mes[mesid]').each(function() {
                 const id = parseInt($(this).attr('mesid'));
@@ -124,7 +124,7 @@ function showControlPanel() {
                 }
             });
             updatePanelCount();
-            toastr.success(`已向下全选 #${startId} 之后的所有楼层！`);
+            toastr.success(`已向下全选 #${startId} 之后的所有楼层 ovo`);
         });
 
         $('#md-btn-range').on('click', () => {
@@ -150,7 +150,7 @@ function showControlPanel() {
                 }
             });
             updatePanelCount();
-            if (addedCount > 0) { toastr.success("选中成功！"); $('#md-range-input').val(''); } 
+            if (addedCount > 0) { toastr.success("选中成功 ovo"); $('#md-range-input').val(''); } 
             else toastr.error("格式错误或无对应楼层");
         });
 
@@ -171,7 +171,7 @@ function updatePanelCount() {
 
 // ================= 防呆弹窗 =================
 function showReviewModal() {
-    if (selectedIds.size === 0) return toastr.warning("未选择任何消息！", "提示");
+    if (selectedIds.size === 0) return toastr.warning("未选择任何消息 o^o", "提示");
     closeModal();
     
     let userCount = 0, charCount = 0, sysCount = 0;
@@ -256,7 +256,7 @@ function showReviewModal() {
             $('#md-queue-total').text(`共 ${selectedIds.size} 条`);
             if(selectedIds.size === 0) {
                 closeModal();
-                toastr.info("队列已清空");
+                toastr.info("队列已清空 ovo");
             }
         }, 200);
     });
@@ -307,10 +307,10 @@ async function executeDelete(isMove = false) {
 
     isProcessing = true;
     if (isMove) {
-        $('#md-modal-move').html('<i class="fa-solid fa-spinner fa-spin"></i> 打包中...').css('pointer-events', 'none');
+        $('#md-modal-move').html('<i class="fa-solid fa-spinner fa-spin"></i> 打包中...ovo').css('pointer-events', 'none');
         generateChatFileForMove(finalIds);
     } else {
-        $('#md-modal-confirm').html('<i class="fa-solid fa-spinner fa-spin"></i> 处理中...').css('pointer-events', 'none');
+        $('#md-modal-confirm').html('<i class="fa-solid fa-spinner fa-spin"></i> 处理中...ovo').css('pointer-events', 'none');
     }
     
     if ($('#md-export-backup').is(':checked')) generateTXTBackup(finalIds);
@@ -325,8 +325,8 @@ async function executeDelete(isMove = false) {
     }
 
     if (successCount > 0) {
-        if (isMove) toastr.success(`成功搬走 ${successCount} 条信息！请使用酒馆的【导入聊天】功能。`, "搬家完成", {timeOut: 8000});
-        else toastr.success(`成功删除${successCount}条信息`);
+        if (isMove) toastr.success(`成功搬走 ${successCount} 条信息！请使用酒馆的【导入聊天】功能 ovo`, "搬家完成 ovo", {timeOut: 8000});
+        else toastr.success(`成功删除${successCount}条信息 ovo`);
     }
     
     isProcessing = false;
@@ -346,7 +346,7 @@ jQuery(() => {
             btn.addEventListener('click', toggleMode);
             bar.appendChild(btn);
             clearInterval(checkBtn);
-            console.log(`${extensionName} 加载完成！`);
+            console.log(`${extensionName} 加载完成 ovo`);
         }
     }, 1000); 
 });
