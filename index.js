@@ -6,60 +6,153 @@ let isProcessing = false;
 let selectedIds = new Set();
 let lastClickedId = null;
 
-// ================= CSS 样式 =================
+// ================= CSS 样式 (复刻备份助手的高级质感) =================
 const styleHtml = `
 <style>
-    .md-click-catcher {
-        position: absolute; top: 0; left: 0; right: 0; bottom: 0;
-        z-index: 1000; cursor: pointer; border-radius: 10px;
-        transition: all 0.2s ease;
-    }
-    .mes.md-selected .md-click-catcher {
-        background: rgba(255, 71, 87, 0.15);
-        border: 2px solid #ff4757;
-        backdrop-filter: brightness(0.7);
-    }
+    /* 拦截遮罩与气泡选中特效 (稍微调淡了一点，显得更高级) */
+    .md-click-catcher { position: absolute; inset: 0; z-index: 1000; cursor: pointer; border-radius: 10px; transition: all 0.2s ease; }
+    .mes.md-selected .md-click-catcher { background: rgba(111, 168, 220, 0.15); border: 2px solid #6fa8dc; backdrop-filter: brightness(0.8); }
     .mes.md-selected .md-click-catcher::after {
-        content: '✓'; position: absolute; right: 15px; top: 15px;
-        background: #ff4757; color: white; width: 24px; height: 24px;
-        border-radius: 50%; display: flex; align-items: center; justify-content: center;
+        content: '✓'; position: absolute; right: 15px; top: 15px; background: #6fa8dc; color: white; 
+        width: 24px; height: 24px; border-radius: 50%; display: flex; align-items: center; justify-content: center;
         font-weight: bold; font-size: 14px; box-shadow: 0 2px 5px rgba(0,0,0,0.5);
     }
-    .md-nuke-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 12px; }
-    .md-nuke-card {
-        background: rgba(255, 71, 87, 0.08); border: 1px solid rgba(255, 71, 87, 0.3);
-        border-radius: 8px; padding: 12px; display: flex; flex-direction: column; gap: 8px;
-        transition: transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275), opacity 0.2s;
-    }
-    .md-nuke-card:hover { border-color: rgba(255, 71, 87, 0.8); background: rgba(255, 71, 87, 0.15); }
-    .md-spare-btn {
-        background: #10ac84; color: white; border: none; border-radius: 4px; padding: 4px 8px;
-        font-size: 12px; cursor: pointer; display: flex; align-items: center; gap: 4px;
-    }
-    .md-spare-btn:hover { background: #1dd1a1 !important; transform: scale(1.05); }
-</style>`;
-$('head').append(styleHtml);
-
-// ================= 核心逻辑 =================
-function toggleMode() {
-    if (isProcessing) return;
-    isDeleteMode = !isDeleteMode;
-    const btn = document.getElementById('multi-delete-open-btn');
     
-    if (isDeleteMode) {
-        if(btn) btn.classList.add('success');
-        selectedIds.clear();
-        lastClickedId = null;
-        showControlPanel();
-        injectClickCatchers();
-    } else {
-        if(btn) btn.classList.remove('success');
-        hideControlPanel();
-        removeClickCatchers();
-        closeModal();
+    /* ★ 弹窗与遮罩 (完美复刻备份助手) */
+    .md-mask { 
+        position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; 
+        background: rgba(0, 0, 0, 0.75); z-index: 20000; 
+        display: flex; justify-content: center; align-items: center; 
+        backdrop-filter: blur(4px); overflow: hidden; 
     }
-}
+    .md-win { 
+        position: relative; width: 95vw; max-width: 600px; max-height: 85vh; 
+        background-color: var(--SmartThemeBgColor, #1a1a1a); 
+        border: 1px solid var(--SmartThemeBorderColor, #444); 
+        border-radius: 12px; display: flex; flex-direction: column; 
+        box-shadow: 0 20px 60px rgba(0,0,0,0.8); overflow: hidden;
+    }
+    .md-head { 
+        padding: 15px 20px; background: rgba(0,0,0,0.3); 
+        border-bottom: 1px solid var(--SmartThemeBorderColor, #333); 
+        display: flex; justify-content: space-between; align-items: center; flex-shrink: 0; 
+    }
+    .md-head h3 { margin: 0; font-size: 1.1rem; display: flex; align-items: center; gap: 10px; color: var(--SmartThemeBodyColor, #eee); }
+    .md-content { padding: 15px 20px; flex: 1; overflow-y: auto; -webkit-overflow-scrolling: touch; }
+    
+    /* 列表项 (取代之前的网格卡片) */
+    .md-list { display: flex; flex-direction: column; gap: 10px; }
+    .md-item { 
+        background: rgba(255,255,255,0.03); border-radius: 8px; 
+        border: 1px solid rgba(255,255,255,0.05); padding: 12px 15px; 
+        display: flex; flex-direction: column; gap: 6px; transition: all 0.2s; 
+    }
+    .md-item-head { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px dashed rgba(255,255,255,0.1); padding-bottom: 6px; }
+    .md-item-title { font-weight: bold; color: var(--SmartThemeQuoteColor, #6fa8dc); font-size: 0.95em; }
+    .md-item-text { font-size: 0.9em; color: #ccc; line-height: 1.4; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
+    
+    /* 底部与按钮区 */
+    .md-foot { padding: 15px 20px; border-top: 1px solid rgba(255,255,255,0.05); flex-shrink: 0; display: flex; flex-direction: column; gap: 12px; background: rgba(0,0,0,0.2); }
+    .md-actions { display: flex; gap: 10px; justify-content: flex-end; flex-wrap: wrap; }
+    
+    /* 高级渐变按钮 */
+    .md-btn { 
+        padding: 10px 16px; border: none; border-radius: 8px; 
+        font-size: 0.9rem; font-weight: bold; cursor: pointer;
+        color: white; transition: 0.2s; display: flex; align-items: center; gap: 6px;
+    }
+    .md-btn:active { transform: translateY(2px); box-shadow: 0 2px 5px rgba(0,0,0,0.2); }
+    .md-btn.primary { background: linear-gradient(135deg, #6fa8dc, #4a90e2); box-shadow: 0 4px 15px rgba(74, 144, 226, 0.3); }
+    .md-btn.danger { background: linear-gradient(135deg, #ff6b6b, #d32f2f); box-shadow: 0 4px 15px rgba(211, 47, 47, 0.3); }
+    .md-btn.purple { background: linear-gradient(135deg, #b19cd9, #8e44ad); box-shadow: 0 4px 15px rgba(142, 68, 173, 0.3); }
+    .md-btn.gray { background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); box-shadow: none; }
+    .md-btn.gray:hover { background: rgba(255,255,255,0.15); }
+    .md-btn-small { padding: 4px 10px; font-size: 0.8rem; border-radius: 6px; background: rgba(255,255,255,0.1); color: #ccc; border: none; cursor: pointer; transition: 0.2s; }
+    .md-btn-small:hover { background: rgba(255,255,255,0.2); color: white; }
 
+    /* 警告框 */
+    .md-warning-box { 
+        background: rgba(255, 68, 68, 0.1); border: 1px solid rgba(255, 68, 68, 0.4); 
+        color: #ff8e8e; padding: 12px; border-radius: 8px; margin-bottom: 15px; font-size: 0.9em;
+    }
+</style>`;
+document.head.insertAdjacentHTML('beforeend', styleHtml);
+
+// ================= 全局方法绑定 =================
+window.multiDeleter = {
+    toggleMode() {
+        if (isProcessing) return;
+        isDeleteMode = !isDeleteMode;
+        const btn = document.getElementById('multi-delete-open-btn');
+        if (isDeleteMode) {
+            if(btn) btn.classList.add('success');
+            selectedIds.clear();
+            lastClickedId = null;
+            injectClickCatchers();
+            showControlPanel(); // 注入到底部聊天框上方
+        } else {
+            if(btn) btn.classList.remove('success');
+            removeClickCatchers();
+            hideControlPanel();
+            closeModal();
+        }
+    },
+    selectRange() {
+        const val = $('#md-range-input').val().trim();
+        if (!val) return toastr.warning("请输入想要选中的楼层，例如: 0-12");
+        let addedCount = 0;
+        val.split(',').forEach(part => {
+            const range = part.trim().split('-');
+            if (range.length === 1) { 
+                const id = parseInt(range[0]);
+                if (!isNaN(id) && $(`.mes[mesid="${id}"]`).length > 0) {
+                    selectedIds.add(id); updateBubbleVisuals(id); addedCount++;
+                }
+            } else if (range.length === 2) { 
+                for (let i = Math.min(range[0], range[1]); i <= Math.max(range[0], range[1]); i++) {
+                    if ($(`.mes[mesid="${i}"]`).length > 0) {
+                        selectedIds.add(i); updateBubbleVisuals(i); addedCount++;
+                    }
+                }
+            }
+        });
+        updatePanelCount();
+        if (addedCount > 0) { toastr.success("选中成功 ovo"); $('#md-range-input').val(''); }
+    },
+    selectAll() {
+        $('.mes[mesid]').each(function() {
+            const id = parseInt($(this).attr('mesid'));
+            if(!isNaN(id)) { selectedIds.add(id); updateBubbleVisuals(id); }
+        });
+        updatePanelCount();
+    },
+    selectDown() {
+        if (selectedIds.size === 0) return toastr.warning("请先点击选择一个起始楼层 o-o");
+        const startId = Math.min(...Array.from(selectedIds));
+        $('.mes[mesid]').each(function() {
+            const id = parseInt($(this).attr('mesid'));
+            if(!isNaN(id) && id >= startId) { selectedIds.add(id); updateBubbleVisuals(id); }
+        });
+        updatePanelCount();
+        toastr.success(`已向下全选 #${startId} 之后的所有楼层 ovo`);
+    },
+    openReview() { showReviewModal(); },
+    spare(id) {
+        selectedIds.delete(id);
+        updateBubbleVisuals(id);
+        updatePanelCount();
+        $(`#md-item-${id}`).slideUp(200, function() { 
+            $(this).remove(); 
+            $('#md-queue-total').text(`共 ${selectedIds.size} 条`);
+            if(selectedIds.size === 0) { closeModal(); toastr.info("队列已清空 ovo"); }
+        });
+    },
+    execMove() { executeDelete(true); },
+    execDelete() { executeDelete(false); },
+    closeReview() { closeModal(); }
+};
+
+// ================= 气泡点击事件 =================
 function injectClickCatchers() {
     $('.mes').each(function() {
         const mesId = $(this).attr('mesid');
@@ -68,7 +161,21 @@ function injectClickCatchers() {
             const catcher = $(`<div class="md-click-catcher" data-mesid="${mesId}"></div>`);
             catcher.on('click', function(e) {
                 e.stopPropagation(); 
-                handleBubbleClick(parseInt(mesId), e.shiftKey);
+                const id = parseInt(mesId);
+                if (e.shiftKey && lastClickedId !== null && lastClickedId !== id) {
+                    const isTargetChecked = !selectedIds.has(id); 
+                    for (let i = Math.min(id, lastClickedId); i <= Math.max(id, lastClickedId); i++) {
+                        if ($(`.mes[mesid="${i}"]`).length > 0) {
+                            if (isTargetChecked) selectedIds.add(i); else selectedIds.delete(i);
+                            updateBubbleVisuals(i);
+                        }
+                    }
+                } else {
+                    if (selectedIds.has(id)) selectedIds.delete(id); else selectedIds.add(id);
+                    updateBubbleVisuals(id);
+                }
+                lastClickedId = id;
+                updatePanelCount();
             });
             $(this).append(catcher);
         }
@@ -80,243 +187,130 @@ function removeClickCatchers() {
     $('.mes').removeClass('md-selected');
 }
 
-function handleBubbleClick(id, isShiftPressed) {
-    if (isShiftPressed && lastClickedId !== null && lastClickedId !== id) {
-        const start = Math.min(id, lastClickedId);
-        const end = Math.max(id, lastClickedId);
-        const isTargetChecked = !selectedIds.has(id); 
-        for (let i = start; i <= end; i++) {
-            if ($(`.mes[mesid="${i}"]`).length > 0) {
-                if (isTargetChecked) selectedIds.add(i);
-                else selectedIds.delete(i);
-                updateBubbleVisuals(i);
-            }
-        }
-    } else {
-        if (selectedIds.has(id)) selectedIds.delete(id);
-        else selectedIds.add(id);
-        updateBubbleVisuals(id);
-    }
-    lastClickedId = id;
-    updatePanelCount();
-}
-
 function updateBubbleVisuals(id) {
-    const bubble = $(`.mes[mesid="${id}"]`);
-    if (selectedIds.has(id)) bubble.addClass('md-selected');
-    else bubble.removeClass('md-selected');
-}
-
-// ================= 你喜欢的完美悬浮控制面板 =================
-function showControlPanel() {
-    if (!document.getElementById('multi-delete-panel')) {
-        const html = `
-        <div id="multi-delete-panel" style="position: fixed; bottom: 20px; left: 10px; right: 10px; margin: 0 auto; max-width: 600px; z-index: 2147483647; background: rgba(20,20,20,0.95); backdrop-filter: blur(10px); border-radius: 12px; border: 1px solid #555; padding: 12px; display: flex; flex-direction: column; gap: 10px; box-shadow: 0 4px 20px rgba(0,0,0,0.8);">
-            <div style="display: flex; justify-content: space-between; align-items: center; gap: 10px; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 8px;">
-                <span id="multi-delete-count" style="font-weight: bold; color: white; font-size: 14px; white-space: nowrap;">已选 0 条</span>
-                <div style="display: flex; align-items: center; gap: 5px;">
-                    <input type="text" id="md-range-input" placeholder="如:0-12" style="width: 100px; background: rgba(0,0,0,0.6); border: 1px solid #777; color: white; border-radius: 4px; padding: 5px 8px; font-size: 13px; outline: none;">
-                    <button id="md-btn-range" class="menu_button interactable" style="background: #8e44ad; color: white; border: none; padding: 5px 10px; border-radius: 5px; font-size: 13px;">范围选中</button>
-                </div>
-            </div>
-            <div style="display: flex; justify-content: center; flex-wrap: wrap; gap: 8px;">
-                <button id="md-btn-all" class="menu_button interactable" style="background: #3498db; color: white; border: none; padding: 6px 10px; border-radius: 5px; font-size: 12px;">全选</button>
-                <button id="md-btn-inv" class="menu_button interactable" style="background: #16a085; color: white; border: none; padding: 6px 10px; border-radius: 5px; font-size: 12px;">反选</button>
-                <button id="md-btn-down" class="menu_button interactable" style="background: #e67e22; color: white; border: none; padding: 6px 10px; border-radius: 5px; font-size: 12px;">向下全选</button>
-                <button id="multi-delete-exec-btn" class="menu_button interactable" style="background: #ff4757; color: white; border: none; padding: 6px 12px; border-radius: 5px; font-weight: bold; font-size: 12px;"><i class="fa-solid fa-trash"></i> 删除</button>
-                <button id="md-btn-cancel" class="menu_button interactable" style="background: #747d8c; color: white; border: none; padding: 6px 10px; border-radius: 5px; font-size: 12px;">取消</button>
-            </div>
-        </div>`;
-        $('body').append(html);
-
-        $('#md-btn-all').on('click', () => {
-            $('.mes[mesid]').each(function() {
-                const id = parseInt($(this).attr('mesid'));
-                if(!isNaN(id)) { selectedIds.add(id); updateBubbleVisuals(id); }
-            });
-            updatePanelCount();
-        });
-        $('#md-btn-inv').on('click', () => {
-            $('.mes[mesid]').each(function() {
-                const id = parseInt($(this).attr('mesid'));
-                if(!isNaN(id)) {
-                    if (selectedIds.has(id)) selectedIds.delete(id);
-                    else selectedIds.add(id);
-                    updateBubbleVisuals(id);
-                }
-            });
-            updatePanelCount();
-        });
-        $('#md-btn-down').on('click', () => {
-            if (selectedIds.size === 0) return toastr.warning("请先点击选择一个起始楼层 o-o");
-            const startId = Math.min(...Array.from(selectedIds));
-            $('.mes[mesid]').each(function() {
-                const id = parseInt($(this).attr('mesid'));
-                if(!isNaN(id) && id >= startId) {
-                    selectedIds.add(id);
-                    updateBubbleVisuals(id);
-                }
-            });
-            updatePanelCount();
-            toastr.success(`已向下全选 #${startId} 之后的所有楼层 ovo`);
-        });
-
-        $('#md-btn-range').on('click', () => {
-            const val = $('#md-range-input').val().trim();
-            if (!val) return toastr.warning("请输入想要选中的楼层，例如: 0-12");
-            let addedCount = 0;
-            val.split(',').forEach(part => {
-                const range = part.trim().split('-');
-                if (range.length === 1) { 
-                    const id = parseInt(range[0]);
-                    if (!isNaN(id) && $(`.mes[mesid="${id}"]`).length > 0) {
-                        selectedIds.add(id); updateBubbleVisuals(id); addedCount++;
-                    }
-                } else if (range.length === 2) { 
-                    const start = parseInt(range[0]), end = parseInt(range[1]);
-                    if (!isNaN(start) && !isNaN(end)) {
-                        for (let i = Math.min(start, end); i <= Math.max(start, end); i++) {
-                            if ($(`.mes[mesid="${i}"]`).length > 0) {
-                                selectedIds.add(i); updateBubbleVisuals(i); addedCount++;
-                            }
-                        }
-                    }
-                }
-            });
-            updatePanelCount();
-            if (addedCount > 0) { toastr.success("选中成功 ovo"); $('#md-range-input').val(''); } 
-            else toastr.error("格式错误或无对应楼层");
-        });
-
-        $('#multi-delete-exec-btn').on('click', showReviewModal);
-        $('#md-btn-cancel').on('click', toggleMode);
-    }
-    $('#multi-delete-panel').show();
-    updatePanelCount();
-}
-
-function hideControlPanel() {
-    $('#multi-delete-panel').hide();
+    if (selectedIds.has(id)) $(`.mes[mesid="${id}"]`).addClass('md-selected');
+    else $(`.mes[mesid="${id}"]`).removeClass('md-selected');
 }
 
 function updatePanelCount() {
-    $('#multi-delete-count').text(`已选 ${selectedIds.size} 条`);
+    const countEl = document.getElementById('md-win-count');
+    if(countEl) countEl.innerText = `已选 ${selectedIds.size} 条`;
 }
 
-// ================= ★ 修复：高度自适应的防呆弹窗与文本双重获取 =================
+// ================= 底部操作栏 (附着于聊天框上方) =================
+function showControlPanel() {
+    if (document.getElementById('md-action-bar')) return;
+
+    const bar = document.createElement('div');
+    bar.id = 'md-action-bar';
+    bar.style.cssText = "display: flex; flex-direction: column; gap: 10px; padding: 15px; background: rgba(0,0,0,0.2); border-top: 1px solid var(--SmartThemeBorderColor, rgba(255,255,255,0.1)); border-bottom: 1px solid var(--SmartThemeBorderColor, rgba(255,255,255,0.1)); margin-bottom: 5px;";
+    
+    bar.innerHTML = `
+        <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px;">
+            <div style="display: flex; align-items: center; gap: 10px;">
+                <span id="md-win-count" style="font-weight: bold; color: var(--SmartThemeQuoteColor, #6fa8dc); font-size: 14px;">已选 0 条</span>
+                <button class="md-btn-small" onclick="window.multiDeleter.selectAll()">全选</button>
+                <button class="md-btn-small" onclick="window.multiDeleter.selectDown()">向下</button>
+            </div>
+            <div style="display: flex; align-items: center; gap: 6px;">
+                <input type="text" id="md-range-input" placeholder="0-12" style="width: 70px; background: rgba(0,0,0,0.5); border: 1px solid #555; color: white; border-radius: 6px; padding: 5px 8px; font-size: 13px; outline: none;">
+                <button class="md-btn-small" style="background: rgba(111, 168, 220, 0.2); color: #6fa8dc;" onclick="window.multiDeleter.selectRange()">范围选</button>
+            </div>
+        </div>
+        <div style="display: flex; flex-wrap: wrap; gap: 8px; justify-content: flex-end;">
+            <button class="md-btn gray" onclick="window.multiDeleter.toggleMode()">取消退出</button>
+            <button class="md-btn danger" onclick="window.multiDeleter.openReview()"><i class="fa-solid fa-list-check"></i> 预览处理</button>
+        </div>
+    `;
+
+    const formSheld = document.getElementById('form_sheld');
+    const sendForm = document.getElementById('send_form');
+    
+    if (formSheld && sendForm) {
+        formSheld.insertBefore(bar, sendForm);
+    } else {
+        bar.style.position = 'fixed'; bar.style.bottom = '80px'; bar.style.left = '10px'; bar.style.right = '10px'; bar.style.zIndex = '20000'; bar.style.borderRadius = '10px';
+        document.body.appendChild(bar);
+    }
+}
+
+function hideControlPanel() {
+    const bar = document.getElementById('md-action-bar');
+    if(bar) bar.remove();
+}
+
+// ================= ★ 完美质感：列表式防呆预览弹窗 =================
 function showReviewModal() {
     if (selectedIds.size === 0) return toastr.warning("未选择任何消息 o^o", "提示");
     closeModal();
     
-    let userCount = 0, charCount = 0, sysCount = 0;
-    const sortedIds = Array.from(selectedIds).sort((a, b) => a - b);
-    
-    let cardsHtml = '';
-    sortedIds.forEach(id => {
+    let listHtml = '';
+    Array.from(selectedIds).sort((a, b) => a - b).forEach(id => {
         const bubble = $(`.mes[mesid="${id}"]`);
         if (bubble.length === 0) return;
         
         let typeLabel = "角色";
         const isUser = bubble.attr('is_user') === 'true';
-        const isSystem = bubble.attr('is_system') === 'true';
+        if (isUser) typeLabel = "用户";
+        else if (bubble.attr('is_system') === 'true') typeLabel = "系统";
         
-        if (isUser) { userCount++; typeLabel = "用户"; }
-        else if (isSystem) { sysCount++; typeLabel = "系统"; }
-        else { charCount++; }
+        let name = (bubble.attr('ch_name') || '').trim() || (isUser ? "You" : "Character");
+        let textPreview = bubble.find('.mes_text').text().replace(/\n/g, ' ').trim().substring(0, 150) || "（空消息/图片）";
         
-        let rawName = bubble.attr('ch_name');
-        let name = rawName ? rawName.trim() : (isUser ? "You" : "Character");
-        
-        // ★ 核心修复：优先抓屏幕上的文字，抓不到就去底层数据库强行提取，保证预览必出字！
-        let textPreview = bubble.find('.mes_text').text().replace(/\n/g, ' ').trim();
-        if (!textPreview && chat[id] && chat[id].mes) {
-            textPreview = chat[id].mes.replace(/<[^>]*>?/gm, '').replace(/\n/g, ' ').trim();
-        }
-        textPreview = textPreview.substring(0, 150);
-        if (!textPreview) textPreview = "（空消息/纯图片）";
-        
-        cardsHtml += `
-        <div class="md-nuke-card" id="md-card-${id}">
-            <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px dashed rgba(255,255,255,0.2); padding-bottom: 6px;">
-                <div style="display:flex; align-items:center;">
-                    <span style="font-weight: bold; color: #ff6b81; font-size: 13px;">#${id}</span>
-                    <span style="font-size: 12px; color: #ccc; margin-left: 8px;">[${typeLabel}] ${name}</span>
-                </div>
-                <button class="md-spare-btn" data-id="${id}">
-                    <i class="fa-solid fa-rotate-left"></i> 撤出
-                </button>
+        // 采用列表项排版，一目了然
+        listHtml += `
+        <div class="md-item" id="md-item-${id}">
+            <div class="md-item-head">
+                <span class="md-item-title">#${id} [${typeLabel}] ${name}</span>
+                <button class="md-btn-small" onclick="window.multiDeleter.spare(${id})">保留撤出</button>
             </div>
-            <div style="font-size: 13px; color: #ddd; line-height: 1.4; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; word-break: break-all;">${textPreview}</div>
+            <div class="md-item-text">${textPreview}</div>
         </div>`;
     });
 
-    // ★ 核心修复：把 height: 85vh 换成了 max-height: 85% 和 height: auto。
-    // 现在弹窗会“根据内容自动撑开高度”，再也不会出现“选的少却变成长条”的怪事了！
     const modalHtml = `
-    <div id="md-review-modal" style="position: fixed; inset: 0; background: rgba(0,0,0,0.8); z-index: 2147483647; display: flex; align-items: center; justify-content: center; backdrop-filter: blur(5px); padding: 10px;">
-        <div style="background: #222; width: 100%; max-width: 700px; height: auto; max-height: 85%; border-radius: 12px; border: 1px solid #555; display: flex; flex-direction: column; overflow: hidden; box-shadow: 0 10px 40px rgba(0,0,0,0.6);">
-            
-            <div style="flex-shrink: 0; padding: 15px 20px; border-bottom: 1px solid rgba(255,255,255,0.1); font-weight: bold; font-size: 18px; display:flex; justify-content: space-between; align-items: center;">
-                <span><i class="fa-solid fa-trash-can-arrow-up"></i> 处理队列确认</span>
-                <span style="font-size:14px; font-weight:normal; color:#ff6b81;" id="md-queue-total">共 ${selectedIds.size} 条</span>
+    <div id="md-review-modal" class="md-mask">
+        <div class="md-win">
+            <div class="md-head">
+                <h3><i class="fa-solid fa-clipboard-list"></i> 批量处理预览</h3>
+                <div style="cursor:pointer; opacity:0.6;" onclick="window.multiDeleter.closeReview()">✕</div>
             </div>
             
-            <div style="flex: 1 1 auto; overflow-y: auto; min-height: 0; padding: 15px; background: rgba(0,0,0,0.2);">
-                <div style="display: flex; gap: 15px; font-size: 13px; color: #aaa; margin-bottom: 15px; padding: 10px; background: rgba(0,0,0,0.3); border-radius: 8px; flex-wrap: wrap;">
-                    <div>包含：用户发言 <span style="color:#fff;font-weight:bold;">${userCount}</span> 条</div>
-                    <div>角色发言 <span style="color:#fff;font-weight:bold;">${charCount}</span> 条</div>
-                    <div>系统提示 <span style="color:#fff;font-weight:bold;">${sysCount}</span> 条</div>
+            <div class="md-content">
+                <div class="md-warning-box">
+                    <div style="font-weight:bold; margin-bottom:5px;"><i class="fa-solid fa-triangle-exclamation"></i> 操作提醒</div>
+                    将对选中的 <strong id="md-queue-total">${selectedIds.size}</strong> 条消息进行操作。<br>
+                    若发现误选，请点击对应消息的“保留撤出”。
                 </div>
-                <div class="md-nuke-grid">${cardsHtml}</div>
+                <div class="md-list">${listHtml}</div>
             </div>
             
-            <div style="flex-shrink: 0; padding: 15px 20px; border-top: 1px solid rgba(255,255,255,0.1); display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap:10px;">
-                <label style="display:flex; align-items:center; gap:5px; cursor:pointer; font-size:13px; color:#f39c12;">
-                    <input type="checkbox" id="md-export-backup" style="accent-color:#f39c12; width:16px; height:16px; cursor:pointer;"> 
-                    <i class="fa-solid fa-file-export"></i> 删除前下载TXT备份
+            <div class="md-foot">
+                <label style="color:#aaa; font-size:13px; display:flex; align-items:center; gap:8px; cursor:pointer;">
+                    <input type="checkbox" id="md-export-backup" style="cursor:pointer;"> 
+                    <i class="fa-solid fa-file-arrow-down"></i> 执行前顺便下载 TXT 备份
                 </label>
-                <div style="display:flex; gap:10px; flex-wrap:wrap; justify-content: flex-end;">
-                    <button id="md-modal-cancel" class="menu_button interactable" style="background: #747d8c; padding: 6px 12px; cursor:pointer;">返回</button>
-                    <button id="md-modal-move" class="menu_button interactable" style="background: #8e44ad; color: white; border: none; border-radius: 5px; padding: 6px 12px; font-weight:bold; cursor:pointer;" title="打包成.jsonl文件并移除">
-                        <i class="fa-solid fa-truck-fast"></i> 搬家
+                <div class="md-actions">
+                    <button class="md-btn gray" onclick="window.multiDeleter.closeReview()">返回修改</button>
+                    <button class="md-btn purple" onclick="window.multiDeleter.execMove()">
+                        <i class="fa-solid fa-truck-fast"></i> 搬家导出
                     </button>
-                    <button id="md-modal-confirm" class="menu_button interactable" style="background: #ff4757; font-weight:bold; padding: 6px 12px; cursor:pointer;">确认删除</button>
+                    <button id="md-btn-final-del" class="md-btn danger" onclick="window.multiDeleter.execDelete()">
+                        <i class="fa-solid fa-trash-can"></i> 确认删除
+                    </button>
                 </div>
             </div>
         </div>
     </div>`;
     
     $('body').append(modalHtml);
-    
-    $('#md-modal-cancel').on('click', closeModal);
-    $('#md-modal-confirm').on('click', () => executeDelete(false));
-    $('#md-modal-move').on('click', () => executeDelete(true));
-    
-    $('#md-review-modal').on('click', '.md-spare-btn', function() {
-        const id = parseInt($(this).data('id'));
-        selectedIds.delete(id);
-        updateBubbleVisuals(id);
-        updatePanelCount();
-        
-        const card = $(`#md-card-${id}`);
-        card.css({ transform: 'scale(0.8)', opacity: 0 });
-        
-        setTimeout(() => {
-            card.remove(); 
-            $('#md-queue-total').text(`共 ${selectedIds.size} 条`);
-            if(selectedIds.size === 0) {
-                closeModal();
-                toastr.info("队列已清空 ovo");
-            }
-        }, 200);
-    });
 }
 
 function closeModal() {
     $('#md-review-modal').remove();
 }
 
-// ================= 导出与操作 =================
+// ================= 导出与执行 =================
 function generateTXTBackup(idsToNuke) {
     try {
         let content = "=== SillyTavern Deleted Messages Backup ===\n";
@@ -356,13 +350,10 @@ async function executeDelete(isMove = false) {
     let finalIds = Array.from(selectedIds);
 
     isProcessing = true;
-    if (isMove) {
-        $('#md-modal-move').html('<i class="fa-solid fa-spinner fa-spin"></i> 打包中...ovo').css('pointer-events', 'none');
-        generateChatFileForMove(finalIds);
-    } else {
-        $('#md-modal-confirm').html('<i class="fa-solid fa-spinner fa-spin"></i> 处理中...ovo').css('pointer-events', 'none');
-    }
+    const btnDel = document.getElementById('md-btn-final-del');
+    if (btnDel) { btnDel.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> 处理中...ovo'; btnDel.style.pointerEvents = 'none'; }
     
+    if (isMove) generateChatFileForMove(finalIds);
     if ($('#md-export-backup').is(':checked')) generateTXTBackup(finalIds);
 
     finalIds.sort((a, b) => b - a);
@@ -381,22 +372,22 @@ async function executeDelete(isMove = false) {
     
     isProcessing = false;
     closeModal();
-    toggleMode();
+    window.multiDeleter.toggleMode(); // 彻底退出
 }
 
 // ================= 插件入口 =================
 jQuery(() => {
     const checkBtn = setInterval(() => {
-        const bar = document.getElementById('extensionsMenu');
-        if (bar && !document.getElementById('multi-delete-open-btn')) {
+        const menu = document.getElementById('extensionsMenu');
+        if (menu && !document.getElementById('multi-delete-open-btn')) {
             const btn = document.createElement('div');
             btn.id = 'multi-delete-open-btn';
             btn.className = 'list-group-item flex-container flex-gap-10 interactable';
             btn.innerHTML = '<div class="fa-solid fa-list-check"></div><div>批量删除信息</div>'; 
-            btn.addEventListener('click', toggleMode);
-            bar.appendChild(btn);
+            btn.onclick = window.multiDeleter.toggleMode;
+            menu.appendChild(btn);
             clearInterval(checkBtn);
-            console.log(`${extensionName} 自适应终极版加载完成 ovo`);
+            console.log(`${extensionName} 质感拉满版加载完成 ovo`);
         }
     }, 1000); 
 });
