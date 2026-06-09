@@ -32,7 +32,7 @@
 2. 点击顶部菜单栏的 **扩展 (Extensions)** 图标 🧩。
 3. 点击 **安装扩展 (Install Extension)**。
 4. 在输入框中粘贴本仓库的 GitHub 链接：
-   `https://github.com/oreti/st-multi-deleter` *(上传后记得把这里换成你真实的链接哦！)*
+   `https://github.com/4oreti/st-multi-deleter` 
 5. 点击 **Save (保存/安装)**，等待几秒钟，安装完成后刷新页面 (F5) 即可使用！
 
 ## 💻 使用说明 (How to Use)
