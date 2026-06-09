@@ -1,12 +1,12 @@
 {
-    "display_name": "批量删楼工具 (Multi Deleter)",
+    "display_name": "批量删除信息 (Multi Deleter)",
     "loading_order": 10,
     "requires": [],
     "optional": [],
     "js": "index.js",
     "css": "style.css",
-    "author": "oreti",
+    "author": "4oreti",
     "version": "1.0.0",
-    "homePage": "https://github.com/oreti/ST-Multi-Deleter",
+    "homePage": "https://github.com/4oreti/st-multi-deleter",
     "updata": "v1.0.0\n首次发布，支持批量、跨层选择并删除聊天记录。"
 }
