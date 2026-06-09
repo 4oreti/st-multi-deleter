@@ -272,7 +272,9 @@ function showReviewModal() {
         let rawName = bubble.attr('ch_name');
         let name = rawName ? rawName.trim() : (isUser ? "You" : "Character");
         
-        let textPreview = bubble.find('.mes_text').text().replace(/\n/g, ' ').trim().substring(0, 150);
+        // ★ 修复3：限制预览字数为60字符，防止卡片过长
+        let textPreview = bubble.find('.mes_text').text().replace(/\n/g, ' ').trim().substring(0, 60);
+        if (bubble.find('.mes_text').text().trim().length > 60) textPreview += "...";
         if (!textPreview) textPreview = "（空消息/图片）";
         
         cardsHtml += `
@@ -286,21 +288,23 @@ function showReviewModal() {
                     <i class="fa-solid fa-rotate-left"></i> 撤出
                 </button>
             </div>
-            <div style="font-size: 13px; color: var(--SmartThemeBodyColor, #ddd); line-height: 1.4; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden;">${textPreview}</div>
+            <div style="font-size: 13px; color: var(--SmartThemeBodyColor, #ddd); line-height: 1.4;">${textPreview}</div>
         </div>`;
     });
 
+    // ★ 修复1：所有背景色改为主题变量
+    // ★ 修复2：弹窗使用固定 height: 80vh，强制内容区滚动，按钮绝不被挤走
     const modalHtml = `
     <div id="md-review-modal" class="md-mask">
-        <div class="md-win">
+        <div class="md-win" style="height: 80vh;">
             
-            <div style="flex-shrink: 0; padding: 15px 20px; background: rgba(0,0,0,0.3); border-bottom: 1px solid var(--SmartThemeBorderColor, #333); font-weight: bold; font-size: 18px; display:flex; justify-content: space-between; align-items: center;">
+            <div style="flex-shrink: 0; padding: 15px 20px; background: var(--SmartThemeBlurTintColor, rgba(0,0,0,0.3)); border-bottom: 1px solid var(--SmartThemeBorderColor, #333); font-weight: bold; font-size: 18px; display:flex; justify-content: space-between; align-items: center;">
                 <span><i class="fa-solid fa-trash-can-arrow-up"></i> 处理队列确认</span>
                 <span style="font-size:14px; font-weight:normal; color: var(--SmartThemeQuoteColor, #ff6b81);" id="md-queue-total">共 ${selectedIds.size} 条</span>
             </div>
             
-            <div style="flex: 1 1 auto; overflow-y: auto; min-height: 0; padding: 15px; background: rgba(0,0,0,0.1); -webkit-overflow-scrolling: touch;">
-                <div style="display: flex; gap: 15px; font-size: 13px; color: var(--SmartThemeBodyColor, #aaa); margin-bottom: 15px; padding: 10px; background: rgba(0,0,0,0.2); border-radius: 8px; flex-wrap: wrap;">
+            <div style="flex: 1 1 auto; overflow-y: auto; min-height: 0; padding: 15px; -webkit-overflow-scrolling: touch;">
+                <div style="display: flex; gap: 15px; font-size: 13px; color: var(--SmartThemeBodyColor, #aaa); margin-bottom: 15px; padding: 10px; background: var(--SmartThemeBlurTintColor, rgba(0,0,0,0.2)); border: 1px solid var(--SmartThemeBorderColor, #444); border-radius: 8px; flex-wrap: wrap;">
                     <div>包含：用户发言 <span style="color: var(--SmartThemeBodyColor, #fff); font-weight:bold;">${userCount}</span> 条</div>
                     <div>角色发言 <span style="color: var(--SmartThemeBodyColor, #fff); font-weight:bold;">${charCount}</span> 条</div>
                     <div>系统提示 <span style="color: var(--SmartThemeBodyColor, #fff); font-weight:bold;">${sysCount}</span> 条</div>
@@ -308,7 +312,7 @@ function showReviewModal() {
                 <div class="md-nuke-grid">${cardsHtml}</div>
             </div>
             
-            <div style="flex-shrink: 0; padding: 15px 20px; border-top: 1px solid var(--SmartThemeBorderColor, #333); display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap:10px;">
+            <div style="flex-shrink: 0; padding: 15px 20px; border-top: 1px solid var(--SmartThemeBorderColor, #333); background: var(--SmartThemeBlurTintColor, rgba(0,0,0,0.3)); display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap:10px;">
                 <label style="display:flex; align-items:center; gap:5px; cursor:pointer; font-size:13px; color: var(--SmartThemeQuoteColor, #f39c12);">
                     <input type="checkbox" id="md-export-backup" style="width:16px; height:16px; cursor:pointer;"> 
                     <i class="fa-solid fa-file-export"></i> 删除前下载TXT备份
