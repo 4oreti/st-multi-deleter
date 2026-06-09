@@ -54,7 +54,7 @@ const styleHtml = `
     /* 居中遮罩 - 跟随主题 */
     .md-mask {
         position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
-        background: rgba(0, 0, 0, 0.75); z-index: 20000;
+        background: var(--SmartThemeBlurTintColor, rgba(0,0,0,0.3)); z-index: 20000;
         display: flex; justify-content: center; align-items: center;
         backdrop-filter: blur(4px); overflow: hidden;
     }
