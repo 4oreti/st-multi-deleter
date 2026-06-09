@@ -1,0 +1,61 @@
+/* 拦截遮罩与选中态 */
+.md-click-catcher {
+    position: absolute; top: 0; left: 0; right: 0; bottom: 0;
+    z-index: 1000; cursor: pointer; border-radius: 10px;
+    transition: all 0.2s ease;
+}
+.mes.md-selected .md-click-catcher {
+    background: rgba(255, 71, 87, 0.15);
+    border: 2px solid #ff4757;
+    backdrop-filter: brightness(0.7);
+}
+.mes.md-selected .md-click-catcher::after {
+    content: '✓'; position: absolute; right: 15px; top: 15px;
+    background: #ff4757; color: white; width: 24px; height: 24px;
+    border-radius: 50%; display: flex; align-items: center; justify-content: center;
+    font-weight: bold; font-size: 14px; box-shadow: 0 2px 5px rgba(0,0,0,0.5);
+}
+
+/* 弹窗基础样式 */
+.md-modal-overlay {
+    position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+    background: rgba(0,0,0,0.75); backdrop-filter: blur(5px);
+    z-index: 999999; display: flex; align-items: center; justify-content: center;
+}
+.md-modal-box {
+    background: var(--SmartThemeBlurTintColor, #222); width: 95%; max-width: 700px;
+    max-height: 85vh; border-radius: 15px; border: 1px solid var(--SmartThemeBorderColor, #555);
+    display: flex; flex-direction: column; overflow: hidden; box-shadow: 0 10px 40px rgba(0,0,0,0.6);
+}
+.md-modal-header { padding: 15px 20px; border-bottom: 1px solid rgba(255,255,255,0.1); font-weight: bold; font-size: 18px; display:flex; justify-content: space-between; align-items: center;}
+.md-modal-body { padding: 15px; overflow-y: auto; flex: 1; background: rgba(0,0,0,0.2); }
+.md-modal-footer { padding: 15px 20px; border-top: 1px solid rgba(255,255,255,0.1); display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap:10px;}
+
+/* 卡片式网格布局 */
+.md-nuke-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 12px;
+}
+.md-nuke-card {
+    background: rgba(255, 71, 87, 0.08); border: 1px solid rgba(255, 71, 87, 0.3);
+    border-radius: 8px; padding: 12px; display: flex; flex-direction: column; gap: 8px;
+    transition: transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275), opacity 0.2s;
+}
+.md-nuke-card:hover { border-color: rgba(255, 71, 87, 0.8); background: rgba(255, 71, 87, 0.15); }
+.md-nuke-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px dashed rgba(255,255,255,0.2); padding-bottom: 6px; }
+.md-nuke-id { font-weight: bold; color: #ff6b81; font-size: 13px; }
+.md-nuke-name { font-size: 12px; color: #ccc; flex: 1; margin-left: 8px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+/* 豁免按钮 */
+.md-spare-btn {
+    background: #10ac84; color: white; border: none; border-radius: 4px; padding: 4px 8px;
+    font-size: 12px; cursor: pointer; display: flex; align-items: center; gap: 4px;
+}
+.md-spare-btn:hover { background: #1dd1a1; transform: scale(1.05); }
+
+.md-nuke-text { font-size: 13px; color: #ddd; line-height: 1.4; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
+
+/* 统计条 */
+.md-stats-bar { display: flex; gap: 15px; font-size: 13px; color: #aaa; margin-bottom: 15px; padding: 10px; background: rgba(0,0,0,0.3); border-radius: 8px; }
+.md-stats-bar span { color: #fff; font-weight: bold; }
