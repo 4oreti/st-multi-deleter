@@ -107,12 +107,14 @@ function updateBubbleVisuals(id) {
     else bubble.removeClass('md-selected');
 }
 
-// ================= 控制面板 =================
+// ================= ★ 终极修复：使用 safe-area-inset-bottom 适配所有手机屏幕！ =================
 function showControlPanel() {
     if (!document.getElementById('multi-delete-panel')) {
-        // 使用绝对居中的弹性布局，完美防手机端越界
+        // 关键修复：使用 calc() 和 env(safe-area-inset-bottom) 智能计算底部边距
+        const bottomOffset = 'calc(20px + env(safe-area-inset-bottom, 0px))';
+        
         const html = `
-        <div id="multi-delete-panel" style="position: fixed; bottom: 20px; left: 10px; right: 10px; margin: 0 auto; max-width: 600px; z-index: 2147483647; background: rgba(20,20,20,0.95); backdrop-filter: blur(10px); border-radius: 12px; border: 1px solid #555; padding: 12px; display: flex; flex-direction: column; gap: 10px; box-shadow: 0 4px 20px rgba(0,0,0,0.8);">
+        <div id="multi-delete-panel" style="position: fixed; bottom: ${bottomOffset}; left: 10px; right: 10px; margin: 0 auto; max-width: 600px; z-index: 2147483647; background: rgba(20,20,20,0.95); backdrop-filter: blur(10px); border-radius: 12px; border: 1px solid #555; padding: 12px; display: flex; flex-direction: column; gap: 10px; box-shadow: 0 4px 20px rgba(0,0,0,0.8);">
             <div style="display: flex; justify-content: space-between; align-items: center; gap: 10px; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 8px;">
                 <span id="multi-delete-count" style="font-weight: bold; color: white; font-size: 14px; white-space: nowrap;">已选 0 条</span>
                 <div style="display: flex; align-items: center; gap: 5px;">
@@ -204,7 +206,7 @@ function updatePanelCount() {
     $('#multi-delete-count').text(`已选 ${selectedIds.size} 条`);
 }
 
-// ================= ★ 修复：所见即所得防呆弹窗与防按钮挤出 =================
+// ================= 防呆弹窗 (也加上了防按钮挤出修复) =================
 function showReviewModal() {
     if (selectedIds.size === 0) return toastr.warning("未选择任何消息 o^o", "提示");
     closeModal();
@@ -214,24 +216,16 @@ function showReviewModal() {
     
     let cardsHtml = '';
     sortedIds.forEach(id => {
-        // ★ 核心修复：直接读取屏幕上的气泡，取代读取 chat 数组
         const bubble = $(`.mes[mesid="${id}"]`);
-        if (bubble.length === 0) return; // 跳过不存在的气泡
-        
+        if (bubble.length === 0) return;
         let typeLabel = "角色";
         const isUser = bubble.attr('is_user') === 'true';
         const isSystem = bubble.attr('is_system') === 'true';
-        
         if (isUser) { userCount++; typeLabel = "用户"; }
         else if (isSystem) { sysCount++; typeLabel = "系统"; }
         else { charCount++; }
-        
-        let rawName = bubble.attr('ch_name');
-        let name = rawName ? rawName.trim() : (isUser ? "You" : "Character");
-        
-        // 直接提取气泡里的纯文本，过滤掉换行符
-        let textPreview = bubble.find('.mes_text').text().replace(/\n/g, ' ').trim().substring(0, 150);
-        if (!textPreview) textPreview = "（空消息/图片）";
+        let name = (bubble.attr('ch_name') || '').trim() || (isUser ? "You" : "Character");
+        let textPreview = bubble.find('.mes_text').text().replace(/\n/g, ' ').trim().substring(0, 150) || "（空消息/图片）";
         
         cardsHtml += `
         <div class="md-nuke-card" id="md-card-${id}">
@@ -248,17 +242,13 @@ function showReviewModal() {
         </div>`;
     });
 
-    // ★ 核心修复：弹窗结构增加严格高度限制和 min-height: 0，按钮永不被挤走！
     const modalHtml = `
     <div id="md-review-modal" style="position: fixed; inset: 0; background: rgba(0,0,0,0.8); z-index: 2147483647; display: flex; align-items: center; justify-content: center; backdrop-filter: blur(5px); padding: 10px;">
         <div style="background: #222; width: 100%; max-width: 700px; height: 85vh; border-radius: 12px; border: 1px solid #555; display: flex; flex-direction: column; overflow: hidden; box-shadow: 0 10px 40px rgba(0,0,0,0.6);">
-            
             <div style="flex-shrink: 0; padding: 15px 20px; border-bottom: 1px solid rgba(255,255,255,0.1); font-weight: bold; font-size: 18px; display:flex; justify-content: space-between; align-items: center;">
                 <span><i class="fa-solid fa-trash-can-arrow-up"></i> 处理队列确认</span>
                 <span style="font-size:14px; font-weight:normal; color:#ff6b81;" id="md-queue-total">共 ${selectedIds.size} 条</span>
             </div>
-            
-            <!-- 这里就是防止变形的关键：flex: 1 1 auto; overflow-y: auto; min-height: 0; -->
             <div style="flex: 1 1 auto; overflow-y: auto; min-height: 0; padding: 15px; background: rgba(0,0,0,0.2);">
                 <div style="display: flex; gap: 15px; font-size: 13px; color: #aaa; margin-bottom: 15px; padding: 10px; background: rgba(0,0,0,0.3); border-radius: 8px; flex-wrap: wrap;">
                     <div>包含：用户发言 <span style="color:#fff;font-weight:bold;">${userCount}</span> 条</div>
@@ -267,7 +257,6 @@ function showReviewModal() {
                 </div>
                 <div class="md-nuke-grid">${cardsHtml}</div>
             </div>
-            
             <div style="flex-shrink: 0; padding: 15px 20px; border-top: 1px solid rgba(255,255,255,0.1); display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap:10px;">
                 <label style="display:flex; align-items:center; gap:5px; cursor:pointer; font-size:13px; color:#f39c12;">
                     <input type="checkbox" id="md-export-backup" style="accent-color:#f39c12; width:16px; height:16px; cursor:pointer;"> 
@@ -295,10 +284,8 @@ function showReviewModal() {
         selectedIds.delete(id);
         updateBubbleVisuals(id);
         updatePanelCount();
-        
         const card = $(`#md-card-${id}`);
         card.css({ transform: 'scale(0.8)', opacity: 0 });
-        
         setTimeout(() => {
             card.remove(); 
             $('#md-queue-total').text(`共 ${selectedIds.size} 条`);
@@ -352,7 +339,6 @@ function generateChatFileForMove(idsToMove) {
 async function executeDelete(isMove = false) {
     if (selectedIds.size === 0) return closeModal();
     let finalIds = Array.from(selectedIds);
-
     isProcessing = true;
     if (isMove) {
         $('#md-modal-move').html('<i class="fa-solid fa-spinner fa-spin"></i> 打包中...ovo').css('pointer-events', 'none');
@@ -360,9 +346,7 @@ async function executeDelete(isMove = false) {
     } else {
         $('#md-modal-confirm').html('<i class="fa-solid fa-spinner fa-spin"></i> 处理中...ovo').css('pointer-events', 'none');
     }
-    
     if ($('#md-export-backup').is(':checked')) generateTXTBackup(finalIds);
-
     finalIds.sort((a, b) => b - a);
     let successCount = 0;
     for (const id of finalIds) {
@@ -371,12 +355,10 @@ async function executeDelete(isMove = false) {
             successCount++;
         }
     }
-
     if (successCount > 0) {
         if (isMove) toastr.success(`成功搬走 ${successCount} 条信息！请使用酒馆的【导入聊天】功能 ovo`, "搬家完成 ovo", {timeOut: 8000});
         else toastr.success(`成功删除${successCount}条信息 ovo`);
     }
-    
     isProcessing = false;
     closeModal();
     toggleMode();
@@ -394,7 +376,7 @@ jQuery(() => {
             btn.addEventListener('click', toggleMode);
             bar.appendChild(btn);
             clearInterval(checkBtn);
-            console.log(`${extensionName} 完美版加载完成 ovo`);
+            console.log(`${extensionName} 终极适配版加载完成 ovo`);
         }
     }, 1000); 
 });
