@@ -6,7 +6,7 @@ let isProcessing = false;
 let selectedIds = new Set();
 let lastClickedId = null;
 
-// ================= CSS 样式 =================
+// ================= CSS 样式（使用酒馆主题变量） =================
 const styleHtml = `
 <style>
     .md-click-catcher {
@@ -38,7 +38,7 @@ const styleHtml = `
     }
     .md-spare-btn:hover { background: #1dd1a1 !important; transform: scale(1.05); }
 
-    /* 备份助手同款居中遮罩 */
+    /* 备份助手同款居中遮罩 - 跟随主题 */
     .md-mask {
         position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
         background: rgba(0, 0, 0, 0.75); z-index: 20000;
@@ -47,11 +47,33 @@ const styleHtml = `
     }
     .md-win {
         position: relative; width: 90vw; max-width: 700px; max-height: 85vh;
-        background-color: #1a1a1a;
+        background-color: var(--SmartThemeBgColor, #1a1a1a);
+        background-image: linear-gradient(var(--SmartThemeBgColor, #1a1a1a), var(--SmartThemeBgColor, #1a1a1a));
         border: 1px solid var(--SmartThemeBorderColor, #444);
         border-radius: 12px; display: flex; flex-direction: column;
         box-shadow: 0 20px 60px rgba(0,0,0,0.8); overflow: hidden;
+        color: var(--SmartThemeBodyColor, #eee);
     }
+
+    /* 控制面板 - 跟随主题 */
+    #multi-delete-panel {
+        display: flex; flex-direction: column; gap: 10px; padding: 12px;
+        background: var(--SmartThemeBlurTintColor, rgba(0,0,0,0.5));
+        border: 1px solid var(--SmartThemeBorderColor, #555);
+        border-radius: 8px; margin-bottom: 5px;
+    }
+    #multi-delete-panel input[type="text"] {
+        background: rgba(0,0,0,0.3); border: 1px solid var(--SmartThemeBorderColor, #777);
+        color: var(--SmartThemeBodyColor, white); border-radius: 4px; padding: 5px 8px; font-size: 13px; outline: none;
+    }
+
+    /* 通用按钮基础样式 - 跟随主题 */
+    .md-theme-btn {
+        color: var(--SmartThemeBodyColor, white); border: 1px solid var(--SmartThemeBorderColor, #555);
+        border-radius: 5px; cursor: pointer; transition: 0.2s; font-size: 12px; padding: 6px 10px;
+    }
+    .md-theme-btn:hover { filter: brightness(1.2); }
+    .md-theme-btn:active { transform: scale(0.95); }
 </style>`;
 $('head').append(styleHtml);
 
@@ -122,31 +144,29 @@ function updateBubbleVisuals(id) {
     else bubble.removeClass('md-selected');
 }
 
-// ================= 控制面板（嵌入发送框上方） =================
+// ================= 控制面板（嵌入发送框上方）=================
 function showControlPanel() {
     if (document.getElementById('multi-delete-panel')) return;
 
     const panel = document.createElement('div');
     panel.id = 'multi-delete-panel';
     panel.innerHTML = `
-        <div style="display: flex; justify-content: space-between; align-items: center; gap: 10px; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 8px;">
-            <span id="multi-delete-count" style="font-weight: bold; color: white; font-size: 14px; white-space: nowrap;">已选 0 条</span>
+        <div style="display: flex; justify-content: space-between; align-items: center; gap: 10px; border-bottom: 1px solid var(--SmartThemeBorderColor, rgba(255,255,255,0.1)); padding-bottom: 8px;">
+            <span id="multi-delete-count" style="font-weight: bold; color: var(--SmartThemeBodyColor, white); font-size: 14px; white-space: nowrap;">已选 0 条</span>
             <div style="display: flex; align-items: center; gap: 5px;">
-                <input type="text" id="md-range-input" placeholder="如:0-12" style="width: 100px; background: rgba(0,0,0,0.6); border: 1px solid #777; color: white; border-radius: 4px; padding: 5px 8px; font-size: 13px; outline: none;">
-                <button id="md-btn-range" class="menu_button interactable" style="background: #8e44ad; color: white; border: none; padding: 5px 10px; border-radius: 5px; font-size: 13px;">范围选中</button>
+                <input type="text" id="md-range-input" placeholder="如:0-12" style="width: 100px;">
+                <button id="md-btn-range" class="md-theme-btn" style="background: var(--SmartThemeQuoteColor, #8e44ad);">范围选中</button>
             </div>
         </div>
         <div style="display: flex; justify-content: center; flex-wrap: wrap; gap: 8px;">
-            <button id="md-btn-all" class="menu_button interactable" style="background: #3498db; color: white; border: none; padding: 6px 10px; border-radius: 5px; font-size: 12px;">全选</button>
-            <button id="md-btn-inv" class="menu_button interactable" style="background: #16a085; color: white; border: none; padding: 6px 10px; border-radius: 5px; font-size: 12px;">反选</button>
-            <button id="md-btn-down" class="menu_button interactable" style="background: #e67e22; color: white; border: none; padding: 6px 10px; border-radius: 5px; font-size: 12px;">向下全选</button>
-            <button id="multi-delete-exec-btn" class="menu_button interactable" style="background: #ff4757; color: white; border: none; padding: 6px 12px; border-radius: 5px; font-weight: bold; font-size: 12px;"><i class="fa-solid fa-trash"></i> 删除</button>
-            <button id="md-btn-cancel" class="menu_button interactable" style="background: #747d8c; color: white; border: none; padding: 6px 10px; border-radius: 5px; font-size: 12px;">取消</button>
+            <button id="md-btn-all" class="md-theme-btn" style="background: var(--SmartThemeQuoteColor, #3498db);">全选</button>
+            <button id="md-btn-inv" class="md-theme-btn" style="background: var(--SmartThemeQuoteColor, #16a085);">反选</button>
+            <button id="md-btn-down" class="md-theme-btn" style="background: var(--SmartThemeQuoteColor, #e67e22);">向下全选</button>
+            <button id="multi-delete-exec-btn" class="md-theme-btn" style="background: #ff4757; font-weight: bold;"><i class="fa-solid fa-trash"></i> 删除</button>
+            <button id="md-btn-cancel" class="md-theme-btn" style="background: var(--SmartThemeBlurTintColor, #747d8c);">取消</button>
         </div>
     `;
-    panel.style.cssText = "display: flex; flex-direction: column; gap: 10px; padding: 12px; background: rgba(20,20,20,0.95); backdrop-filter: blur(10px); border-radius: 12px; border: 1px solid #555; margin-bottom: 5px;";
 
-    // ★ 嵌入到发送框上方
     const formSheld = document.getElementById('form_sheld');
     const sendForm = document.getElementById('send_form');
     if (formSheld && sendForm) {
@@ -228,7 +248,7 @@ function updatePanelCount() {
     $('#multi-delete-count').text(`已选 ${selectedIds.size} 条`);
 }
 
-// ================= 防呆弹窗（备份助手同款居中） =================
+// ================= 防呆弹窗（主题色居中窗口）=================
 function showReviewModal() {
     if (selectedIds.size === 0) return toastr.warning("未选择任何消息 o^o", "提示");
     closeModal();
@@ -257,49 +277,48 @@ function showReviewModal() {
         
         cardsHtml += `
         <div class="md-nuke-card" id="md-card-${id}">
-            <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px dashed rgba(255,255,255,0.2); padding-bottom: 6px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px dashed var(--SmartThemeBorderColor, rgba(255,255,255,0.2)); padding-bottom: 6px;">
                 <div style="display:flex; align-items:center;">
-                    <span style="font-weight: bold; color: #ff6b81; font-size: 13px;">#${id}</span>
-                    <span style="font-size: 12px; color: #ccc; margin-left: 8px;">[${typeLabel}] ${name}</span>
+                    <span style="font-weight: bold; color: var(--SmartThemeQuoteColor, #ff6b81); font-size: 13px;">#${id}</span>
+                    <span style="font-size: 12px; color: var(--SmartThemeBodyColor, #ccc); margin-left: 8px;">[${typeLabel}] ${name}</span>
                 </div>
                 <button class="md-spare-btn" data-id="${id}">
                     <i class="fa-solid fa-rotate-left"></i> 撤出
                 </button>
             </div>
-            <div style="font-size: 13px; color: #ddd; line-height: 1.4; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden;">${textPreview}</div>
+            <div style="font-size: 13px; color: var(--SmartThemeBodyColor, #ddd); line-height: 1.4; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden;">${textPreview}</div>
         </div>`;
     });
 
-    // ★ 使用备份助手同款的 .md-mask + .md-win 居中窗口
     const modalHtml = `
     <div id="md-review-modal" class="md-mask">
         <div class="md-win">
             
-            <div style="flex-shrink: 0; padding: 15px 20px; border-bottom: 1px solid rgba(255,255,255,0.1); font-weight: bold; font-size: 18px; display:flex; justify-content: space-between; align-items: center;">
+            <div style="flex-shrink: 0; padding: 15px 20px; background: rgba(0,0,0,0.3); border-bottom: 1px solid var(--SmartThemeBorderColor, #333); font-weight: bold; font-size: 18px; display:flex; justify-content: space-between; align-items: center;">
                 <span><i class="fa-solid fa-trash-can-arrow-up"></i> 处理队列确认</span>
-                <span style="font-size:14px; font-weight:normal; color:#ff6b81;" id="md-queue-total">共 ${selectedIds.size} 条</span>
+                <span style="font-size:14px; font-weight:normal; color: var(--SmartThemeQuoteColor, #ff6b81);" id="md-queue-total">共 ${selectedIds.size} 条</span>
             </div>
             
-            <div style="flex: 1 1 auto; overflow-y: auto; min-height: 0; padding: 15px; background: rgba(0,0,0,0.2); -webkit-overflow-scrolling: touch;">
-                <div style="display: flex; gap: 15px; font-size: 13px; color: #aaa; margin-bottom: 15px; padding: 10px; background: rgba(0,0,0,0.3); border-radius: 8px; flex-wrap: wrap;">
-                    <div>包含：用户发言 <span style="color:#fff;font-weight:bold;">${userCount}</span> 条</div>
-                    <div>角色发言 <span style="color:#fff;font-weight:bold;">${charCount}</span> 条</div>
-                    <div>系统提示 <span style="color:#fff;font-weight:bold;">${sysCount}</span> 条</div>
+            <div style="flex: 1 1 auto; overflow-y: auto; min-height: 0; padding: 15px; background: rgba(0,0,0,0.1); -webkit-overflow-scrolling: touch;">
+                <div style="display: flex; gap: 15px; font-size: 13px; color: var(--SmartThemeBodyColor, #aaa); margin-bottom: 15px; padding: 10px; background: rgba(0,0,0,0.2); border-radius: 8px; flex-wrap: wrap;">
+                    <div>包含：用户发言 <span style="color: var(--SmartThemeBodyColor, #fff); font-weight:bold;">${userCount}</span> 条</div>
+                    <div>角色发言 <span style="color: var(--SmartThemeBodyColor, #fff); font-weight:bold;">${charCount}</span> 条</div>
+                    <div>系统提示 <span style="color: var(--SmartThemeBodyColor, #fff); font-weight:bold;">${sysCount}</span> 条</div>
                 </div>
                 <div class="md-nuke-grid">${cardsHtml}</div>
             </div>
             
-            <div style="flex-shrink: 0; padding: 15px 20px; border-top: 1px solid rgba(255,255,255,0.1); display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap:10px;">
-                <label style="display:flex; align-items:center; gap:5px; cursor:pointer; font-size:13px; color:#f39c12;">
-                    <input type="checkbox" id="md-export-backup" style="accent-color:#f39c12; width:16px; height:16px; cursor:pointer;"> 
+            <div style="flex-shrink: 0; padding: 15px 20px; border-top: 1px solid var(--SmartThemeBorderColor, #333); display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap:10px;">
+                <label style="display:flex; align-items:center; gap:5px; cursor:pointer; font-size:13px; color: var(--SmartThemeQuoteColor, #f39c12);">
+                    <input type="checkbox" id="md-export-backup" style="width:16px; height:16px; cursor:pointer;"> 
                     <i class="fa-solid fa-file-export"></i> 删除前下载TXT备份
                 </label>
                 <div style="display:flex; gap:10px; flex-wrap:wrap; justify-content: flex-end;">
-                    <button id="md-modal-cancel" class="menu_button interactable" style="background: #747d8c; padding: 6px 12px; cursor:pointer;">返回</button>
-                    <button id="md-modal-move" class="menu_button interactable" style="background: #8e44ad; color: white; border: none; border-radius: 5px; padding: 6px 12px; font-weight:bold; cursor:pointer;" title="打包成.jsonl文件并移除">
+                    <button id="md-modal-cancel" class="md-theme-btn" style="background: var(--SmartThemeBlurTintColor, #747d8c); padding: 6px 12px; cursor:pointer;">返回</button>
+                    <button id="md-modal-move" class="md-theme-btn" style="background: var(--SmartThemeQuoteColor, #8e44ad); padding: 6px 12px; font-weight:bold; cursor:pointer;" title="打包成.jsonl文件并移除">
                         <i class="fa-solid fa-truck-fast"></i> 搬家
                     </button>
-                    <button id="md-modal-confirm" class="menu_button interactable" style="background: #ff4757; font-weight:bold; padding: 6px 12px; cursor:pointer;">确认删除</button>
+                    <button id="md-modal-confirm" class="md-theme-btn" style="background: #ff4757; font-weight:bold; padding: 6px 12px; cursor:pointer;">确认删除</button>
                 </div>
             </div>
             
