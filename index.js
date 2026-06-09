@@ -9,6 +9,7 @@ let lastClickedId = null;
 // ================= CSS 样式（使用酒馆主题变量） =================
 const styleHtml = `
 <style>
+    /* 拦截遮罩与气泡选中特效 - 红色保留(危险语义色) */
     .md-click-catcher {
         position: absolute; top: 0; left: 0; right: 0; bottom: 0;
         z-index: 1000; cursor: pointer; border-radius: 10px;
@@ -25,20 +26,32 @@ const styleHtml = `
         border-radius: 50%; display: flex; align-items: center; justify-content: center;
         font-weight: bold; font-size: 14px; box-shadow: 0 2px 5px rgba(0,0,0,0.5);
     }
+
+    /* 卡片网格 - 跟随主题 */
     .md-nuke-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 12px; }
     .md-nuke-card {
-        background: rgba(255, 71, 87, 0.08); border: 1px solid rgba(255, 71, 87, 0.3);
+        background: var(--SmartThemeBlurTintColor, rgba(255,255,255,0.05));
+        border: 1px solid var(--SmartThemeBorderColor, rgba(255,255,255,0.15));
         border-radius: 8px; padding: 12px; display: flex; flex-direction: column; gap: 8px;
-        transition: transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275), opacity 0.2s;
+        transition: transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275), opacity 0.2s, border-color 0.2s;
     }
-    .md-nuke-card:hover { border-color: rgba(255, 71, 87, 0.8); background: rgba(255, 71, 87, 0.15); }
-    .md-spare-btn {
-        background: #10ac84; color: white; border: none; border-radius: 4px; padding: 4px 8px;
-        font-size: 12px; cursor: pointer; display: flex; align-items: center; gap: 4px;
+    .md-nuke-card:hover { 
+        border-color: var(--SmartThemeQuoteColor, #ff6b81); 
+        filter: brightness(1.1);
     }
-    .md-spare-btn:hover { background: #1dd1a1 !important; transform: scale(1.05); }
 
-    /* 备份助手同款居中遮罩 - 跟随主题 */
+    /* 撤出按钮 - 跟随主题 */
+    .md-spare-btn {
+        background: var(--SmartThemeQuoteColor, #10ac84); 
+        color: var(--SmartThemeBodyColor, white); 
+        border: 1px solid var(--SmartThemeBorderColor, transparent); 
+        border-radius: 4px; padding: 4px 8px;
+        font-size: 12px; cursor: pointer; display: flex; align-items: center; gap: 4px;
+        transition: 0.2s;
+    }
+    .md-spare-btn:hover { filter: brightness(1.3); transform: scale(1.05); }
+
+    /* 居中遮罩 - 跟随主题 */
     .md-mask {
         position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
         background: rgba(0, 0, 0, 0.75); z-index: 20000;
@@ -63,13 +76,15 @@ const styleHtml = `
         border-radius: 8px; margin-bottom: 5px;
     }
     #multi-delete-panel input[type="text"] {
-        background: rgba(0,0,0,0.3); border: 1px solid var(--SmartThemeBorderColor, #777);
+        background: var(--SmartThemeBlurTintColor, rgba(0,0,0,0.3)); 
+        border: 1px solid var(--SmartThemeBorderColor, #777);
         color: var(--SmartThemeBodyColor, white); border-radius: 4px; padding: 5px 8px; font-size: 13px; outline: none;
     }
 
-    /* 通用按钮基础样式 - 跟随主题 */
+    /* 通用按钮 - 跟随主题 */
     .md-theme-btn {
-        color: var(--SmartThemeBodyColor, white); border: 1px solid var(--SmartThemeBorderColor, #555);
+        color: var(--SmartThemeBodyColor, white); 
+        border: 1px solid var(--SmartThemeBorderColor, #555);
         border-radius: 5px; cursor: pointer; transition: 0.2s; font-size: 12px; padding: 6px 10px;
     }
     .md-theme-btn:hover { filter: brightness(1.2); }
@@ -303,7 +318,7 @@ function showReviewModal() {
                 <span style="font-size:14px; font-weight:normal; color: var(--SmartThemeQuoteColor, #ff6b81);" id="md-queue-total">共 ${selectedIds.size} 条</span>
             </div>
             
-            <div style="flex: 1 1 auto; overflow-y: auto; min-height: 0; padding: 15px; -webkit-overflow-scrolling: touch;">
+                        <div style="flex: 1 1 auto; overflow-y: auto; min-height: 0; padding: 15px; -webkit-overflow-scrolling: touch;">
                 <div style="display: flex; gap: 15px; font-size: 13px; color: var(--SmartThemeBodyColor, #aaa); margin-bottom: 15px; padding: 10px; background: var(--SmartThemeBlurTintColor, rgba(0,0,0,0.2)); border: 1px solid var(--SmartThemeBorderColor, #444); border-radius: 8px; flex-wrap: wrap;">
                     <div>包含：用户发言 <span style="color: var(--SmartThemeBodyColor, #fff); font-weight:bold;">${userCount}</span> 条</div>
                     <div>角色发言 <span style="color: var(--SmartThemeBodyColor, #fff); font-weight:bold;">${charCount}</span> 条</div>
