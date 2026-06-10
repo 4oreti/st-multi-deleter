@@ -3,7 +3,7 @@
 ![SillyTavern Extension](https://img.shields.io/badge/SillyTavern-Extension-blue.svg)
 ![Version](https://img.shields.io/badge/Version-1.0.0-success.svg)
 
-一款为 SillyTavern（酒馆）聊天记录管理插件。告别繁琐的单条删除和误删风险，以超级高效的方式管理你的聊天记录！
+一款 SillyTavern（酒馆）聊天记录管理插件。告别繁琐的单条删除和误删风险，以超级高效的方式管理你的聊天记录！
 
 ## ✨ 核心特色功能 (Features)
 
