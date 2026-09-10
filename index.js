@@ -204,7 +204,7 @@ function showControlPanel() {
             <button id="md-btn-all" class="md-theme-btn" style="background: var(--SmartThemeBlurTintColor);">全选</button>
             <button id="md-btn-inv" class="md-theme-btn" style="background: var(--SmartThemeBlurTintColor);">反选</button>
             <button id="md-btn-down" class="md-theme-btn" style="background: var(--SmartThemeBlurTintColor);">向下全选</button>
-            <button id="multi-delete-exec-btn" class="md-theme-btn" style="background: #ff4757; color: white !important; font-weight: bold; border:none;"><i class="fa-solid fa-trash"></i> 删除</button>
+            <button id="multi-delete-exec-btn" class="md-theme-btn" style="background: #ff4757; color: white !important; font-weight: bold; border:none;"><i class="fa-solid fa-trash"></i> 删除&搬家</button>
             <button id="md-btn-cancel" class="md-theme-btn" style="background: var(--SmartThemeBlurTintColor);">取消</button>
         </div>
     `;
