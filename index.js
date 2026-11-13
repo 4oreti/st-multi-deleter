@@ -395,7 +395,7 @@ function showReviewModal() {
     $('body').append(modalHtml);
     
     $('#md-modal-cancel').on('click', closeModal);
-    $('#md-modal-confirm').on('click', () => executeDelete(false));
+    $('#md-modal-confirm').on('click', showDeleteConfirm);
     $('#md-modal-move').on('click', () => executeDelete(true));
     
     $('#md-review-modal').on('click', '.md-spare-btn', function() {
@@ -414,6 +414,62 @@ function showReviewModal() {
                 toastr.info("队列已清空 ");
             }
         }, 200);
+    });
+}
+
+function showDeleteConfirm() {
+    if (selectedIds.size === 0) {
+        return toastr.warning("未选择任何消息 o^o", "提示");
+    }
+
+    // 避免重复创建确认弹窗
+    $('#md-delete-confirm-modal').remove();
+
+    const confirmHtml = `
+        <div id="md-delete-confirm-modal" class="md-mask"
+            style="position: fixed; inset: 0; z-index: 2147483647;">
+            <div class="md-win" style="
+                position: relative;
+                z-index: 2147483647;
+                width: min(400px, 90vw);
+                height: auto;
+                min-height: 180px;
+                padding: 24px;
+                display: flex;
+                flex-direction: column;
+                justify-content: center;
+                gap: 20px;
+                text-align: center;
+            ">
+                <div style="font-size: 18px; font-weight: bold; color: var(--SmartThemeBodyColor);">
+                    确认删除？
+                </div>
+                <div style="font-size: 13px; color: var(--SmartThemeBodyColor); opacity: 0.8;">
+                    即将删除 ${selectedIds.size} 条记录，此操作无法撤销。
+                </div>
+                <div style="display: flex; justify-content: center; gap: 12px;">
+                    <button id="md-delete-confirm-cancel" class="md-theme-btn"
+                        style="background: var(--SmartThemeBlurTintColor); padding: 8px 16px;">
+                        取消删除
+                    </button>
+                    <button id="md-delete-confirm-ok" class="md-theme-btn"
+                        style="background: #ff4757; color: white !important; border: none; padding: 8px 16px; font-weight: bold;">
+                        确认删除
+                    </button>
+                </div>
+            </div>
+        </div>
+    `;
+
+    $('body').append(confirmHtml);
+
+    $('#md-delete-confirm-cancel').on('click', function () {
+        $('#md-delete-confirm-modal').remove();
+    });
+
+    $('#md-delete-confirm-ok').on('click', function () {
+        $('#md-delete-confirm-modal').remove();
+        executeDelete(false);
     });
 }
 
